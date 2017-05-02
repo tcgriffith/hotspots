@@ -1,0 +1,49 @@
+---
+title: "hotspot run 0502"
+output:
+  html_document: default
+  html_notebook: default
+---
+
+
+## Plan 
+
+
+- Run hotspot on aspen.  
+    - scripts that need modify:   
+        - position to grch37 ref genome
+        - pbs job submit
+    - maf files using: breast brain kidney skin.  
+    - learn to use git branch, pbs(again).
+    
+- hotspot2
+    - stat tri-nucleotide myself
+        - w/wo lung
+    - model inplementation
+    - play with encode
+    - we need a standard for testing!
+    
+- Review intro
+    - epigenetics(what we lack) 
+    - treatment of cancer(bg current)
+    
+## Jian's mail
+
+Hi TC,
+
+I found ENCODE has tissue samples:
+
+breast: mammary gland, breast epithelium, breast
+brain: brain, forebrain, midbrain, hindbrain, spinal cord, neural tube
+kidney: kidney, right kidney, left kidney
+skin: skin of body, suprapubic skin, lower leg skin, zone of skin
+
+I also checked cancer cell lines:
+breast: MCF-7
+brain: SK-N-SH, U-87 MG
+kidney: HEK293
+skin: A375
+
+All of these are ranked by relevance and number of entries in ENCODE.
+
+[id]: figures/img.png "Title"
