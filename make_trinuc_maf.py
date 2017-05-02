@@ -45,7 +45,7 @@ bedf.close()
 
 # Fetch regions
 print " ... Getting regions"
-subprocess.call("bedtools getfasta -tab -fi /home/tc/tools/.vep/homo_sapiens/86_GRCh37/grch37/Homo_sapiens.GRCh37.75.dna.primary_assembly.fa -bed ___tmp.bed -fo ___tmp.tsv".split(" "))
+subprocess.call("bedtools getfasta -tab -fi /export/home/s5029518/aspen/dataset/vepdata/Homo_sapiens.GRCh37.75.dna.primary_assembly.fa -bed ___tmp.bed -fo ___tmp.tsv".split(" "))
 
 # Add trinuc to lines
 print " ... Adding trinucs (normalized to start from C or T)"
