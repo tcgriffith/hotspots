@@ -1,7 +1,7 @@
 
 # functions for hotspot_algo.R
 
-# returns baseline expected probability given gene length, gene mutation burden, and total samples
+# returns baseline expected probability given toohotgene length, gene mutation burden, and total samples
 get.probability=function(gene,aa,total.muts,total.samples,aa.length) {
 	top=sum(aa$count[which(aa$toohot)])
 	aa.length=aa.length-length(which(aa$toohot))
@@ -9,7 +9,7 @@ get.probability=function(gene,aa,total.muts,total.samples,aa.length) {
 	return((1/aa.length)*(total.muts/total.samples))
 }
 
-# returns the mutability of the codon given the gene
+# returns the mutability of the codon given the geneaa
 get.alpha=function(k,aa,mu_prot){
 	if(is.na(aa$mu_position[k])) return(1)
 	else return(aa$mu_position[k]/mu_prot)
@@ -24,7 +24,7 @@ get.pvalues=function(k,total.muts,aa.length,mu_prot,aa,gene,min_prob,total.sampl
 		lower.tail=FALSE,log.p=TRUE)/log(10,exp(1))
 }
 
-# returns the table and column names of table into a single string 
+# returns the table and column names of table into a single string
 combine=function(tb,sep=":") {
 	out=paste(names(tb)[1],tb[1],sep=sep)
 	if(length(tb)>1) for(i in 2:length(tb)) out=paste(out,paste(names(tb)[i],tb[i],sep=sep),sep="|")
@@ -71,17 +71,17 @@ get.mu.score=function(pos,maf,mu) {
 	t=get.reference.tri(pos,maf)
 	# get the mutability scores of those tri-nucleotides
 	ind=match(names(t),mu$tri)
-	# return the weighted average 
+	# return the weighted average
 	return(sum(mu$mu[ind]*t)/sum(t))
 }
 
-# return the counts and types of tri-nucleotide contexts 
+# return the counts and types of tri-nucleotide contexts
 get.all.tri=function(pos,maf){
 	t=rev(sort(table(maf$Ref_Tri[ which(maf$Amino_Acid_Position==pos) ])))
 	return(paste(names(t),collapse="|"))
 }
 
-# returns the reference amino acid 
+# returns the reference amino acid
 get.reference.aa=function(pos,maf) {
 	tb=table(maf$Reference_Amino_Acid[ which(maf$Amino_Acid_Position==pos) ])
 	tb=tb[ order(tb,decreasing=T) ]
@@ -139,7 +139,7 @@ binom.test_snp=function(gene) {
 	aa.length=max(maf$Protein_Length)
 
 	# Find the mutability of the gene (pre-calculated)
-	# If gene does not exist, use the average mutability of all genes 
+	# If gene does not exist, use the average mutability of all genes
 	ii=which(p$gene==gene)
 	if(any(ii)) mu_protein=p$score[ p$gene==gene ]	else mu_protein=mean(p$score)
 
@@ -335,7 +335,7 @@ annotate.center.bias=function(sig,maf) {
 
 # return calculcated entropy around the site of each hotspot
 annotate.entropy=function(sig) {
-	
+
 	# find genomic position of hotspot
 	hspos=lapply(strsplit(sig$Genomic_Position,"[|]"),function(x) gsub("_.*$","",x))
 	hspos=do.call(rbind,lapply(hspos,function(x) c(gsub(":.*$","",x[1]),range(as.numeric(gsub("^.*:","",x))))))
@@ -362,7 +362,7 @@ annotate.entropy=function(sig) {
 	rpts_seq=getSeq(Hsapiens,rpts)
 	# calculate entropy of returned sequence
 	pN=lapply(strsplit(as.character(rpts_seq),""),function(x) table(x)+(1/4))
-	rpts_entropy=unlist(lapply(pN,function(x) -sum((x/sum(x))*log(x/sum(x)))))  
+	rpts_entropy=unlist(lapply(pN,function(x) -sum((x/sum(x))*log(x/sum(x)))))
 	for(pad in c(12,24,36)) {
 		ui=which(rpts$names==paste("up",pad,sep=""))
 		di=which(rpts$names==paste("dn",pad,sep=""))
@@ -460,7 +460,7 @@ annotate.filtering.judgement=function(sig) {
 	}
 
 	# mapability filter
-	if('align100'%in%colnames(sig) & 'align24'%in%colnames(sig)) {		
+	if('align100'%in%colnames(sig) & 'align24'%in%colnames(sig)) {
 		ranked_align=rowSums(cbind(rank(sig$align100),rank(sig$align24)))
 		xi=which(ranked_align<min(ranked_align[sig$TP]) | sig$align24<quantile(sig$align24,probs=0.125))
 		reason[xi]=ifelse(reason[xi]=="","ALIGNABILITY",paste(reason[xi],"ALIGNABILITY",sep="|"))
@@ -476,7 +476,7 @@ annotate.filtering.judgement=function(sig) {
 	de=as.data.frame(de)
 	xi=which(sig$Hugo_Symbol%in%rownames(de)[de$retained<=(de$excluded*3.5)] & reason=="")
 	reason[xi]=ifelse(reason[xi]=="","FP_RICH_GENE",paste(reason[xi],"FP_GENE",sep="|"))
-	
+
 	supp_table_7_mutsigcv_paper=c(
 		"PCLO","FLG","BAGE2","TPTE","TTN","CSMD1","CSMD3","RYR2","RYR3","MUC16","MUC4",
 		"MUC17","MUC5B","OR10G9","OR2G6","OR4C6","OR4M2","OR2T4","OR5L2","OR2T33"
@@ -529,7 +529,7 @@ get.neighbors=function(df) {
 	return(tt[[which(!is.na(tt))[1]]])
 }
 remove.unexpressed.genes=function(i,maf,express) {
-	
+
 	#coad samples
 	if(maf$TUMORTYPE[i]=='coadread') {
 		tt=which(colnames(express)=='coad' | colnames(express)=='read')
@@ -543,13 +543,13 @@ remove.unexpressed.genes=function(i,maf,express) {
 			return(samples < 0.1*tot[1] && samples < 0.1*tot[2])
 		}
 	}
-	
+
 	tt=grep(maf$TUMORTYPE[i],colnames(express))
 	g=which(express$gene_id==maf$Hugo_Symbol[i])
 	if(!any(g)) return(1==2)
 	#if tumortype is not included, then i will infer gene expressions based on other tumortypes
 	#if gene is not expressed in 95% of all tumor samples, then i infer this gene is not expressed
-	#in the tumor samples we do not have RNASeqV2 data for 
+	#in the tumor samples we do not have RNASeqV2 data for
 	else if(!any(tt)) {
 		explvl=express[ g, ]
 		explvl=do.call('rbind',strsplit(as.character(explvl[2:length(explvl)]),';'))
@@ -569,9 +569,9 @@ remove.unexpressed.genes=function(i,maf,express) {
 
 # deprecated germline SNP filtering based on 1000/NHLBI
 # putative germline SNPs are filtered based on ExAC with minor AF > 0.06%
-# ExAC r0.2 has been preloaded 
+# ExAC r0.2 has been preloaded
 remove.snps=function(maf) {
-	return(maf[ which(!paste(maf$Chromosome,maf$Start_Position,maf$Tumor_Seq_Allele2) 
+	return(maf[ which(!paste(maf$Chromosome,maf$Start_Position,maf$Tumor_Seq_Allele2)
 		%in% paste(exacr0_2snps$Chromosome,exacr0_2snps$Position,exacr0_2snps$Alt)), ])
 }
 

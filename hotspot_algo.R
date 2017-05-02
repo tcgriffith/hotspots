@@ -1,4 +1,4 @@
-#! /usr/bin/env Rscript 
+#! /usr/bin/env Rscript
 
 source('funcs.R')
 args = commandArgs(TRUE)
@@ -22,7 +22,7 @@ ALIGN_FILTER=FALSE
 CENTER_BIAS_FILTER=FALSE
 GENES_INTEREST=FALSE
 
-# Verify that at least required parameters and their values are passed 
+# Verify that at least required parameters and their values are passed
 if(length(args)<3) {
 	cat(usage)
 	stop("Incorrect or missing required input!")
@@ -34,7 +34,7 @@ if(is.integer(idx)) {
 	maf_fn=gsub("--input-maf=","",args[idx])
 	if(!file.exists(maf_fn)) {
 		stop("Unable to find mutation file!")
-	} 
+	}
 } else {
 	stop("Missing required --input-maf parameter!")
 }
@@ -45,7 +45,7 @@ if(is.integer(idx)) {
 	rdata_file=gsub("--rdata=","",args[idx])
 	if(!file.exists(rdata_file)) {
 		stop("Unable to find required Rdata file!")
-	} 
+	}
 } else {
 	stop("Missing required --rdata parameter!")
 }
@@ -64,23 +64,23 @@ if(length(idx)!=0) {
 	gene_interest_fn=gsub("--gene-query=","",args[idx])
 	if(!file.exists(gene_interest_fn)) {
 		stop("Unable to find gene-query file!")
-	} 
+	}
 	GENES_INTEREST=TRUE
-} 
+}
 
 # Check for homopolymer file
 idx=grep("--homopolymer",args)
 if(length(idx)!=0) {
 	HOMOPOLYMER_FILTER=as.logical(gsub("--homopolymer=","",args[idx]))
 	if(is.na(HOMOPOLYMER_FILTER)) HOMOPOLYMER_FILTER=TRUE
-} 
+}
 
 # Check for center bias filter file
 idx=grep("--filter-centerbias",args)
 if(length(idx)!=0) {
 	CENTER_BIAS_FILTER=as.logical(gsub("--filter-centerbias=","",args[idx]))
 	if(is.na(CENTER_BIAS_FILTER)) CENTER_BIAS_FILTER=FALSE
-} 
+}
 
 # Check for 24-mer alignability file
 idx=grep("--align24mer",args)
@@ -88,8 +88,8 @@ if(length(idx)!=0) {
 	align24_fn=gsub("--align24mer=","",args[idx])
 	if(!file.exists(align24_fn)) {
 		stop("Unable to find 24-mer alignability file!")
-	} 
-} 
+	}
+}
 
 # Check for homopolymer file
 idx=grep("--align100mer",args)
@@ -97,7 +97,7 @@ if(length(idx)!=0) {
 	align100_fn=gsub("--align100mer=","",args[idx])
 	if(!file.exists(align100_fn)) {
 		stop("Unable to find align100mer file!")
-	} 
+	}
 	# checks to make sure both 100-mer and 24-mer files are read in
 	if(file.exists(align24_fn) & file.exists(align100_fn)) ALIGN_FILTER=TRUE
 }
@@ -108,7 +108,7 @@ if(length(idx)!=0) {
 	if(QVAL >1 | QVAL < 0 | is.na(QVAL) ) {
 		cat('Invalid q-value entered. Using default q-value cutf-off, 0.01\n')
 		QVAL=0.01
-	}  
+	}
 }
 if(length(idx)==0) {
 	cat('No q-value entered. Using default q-value cut-off, 0.01\n')
@@ -128,8 +128,8 @@ required="\n  Required packages:
 	BSgenome.Hsapiens.UCSC.hg19
 	IRanges\n
 "
-if(!suppressMessages(library(data.table,logical.return=TRUE)) | 
-	!suppressMessages(library(IRanges,logical.return=TRUE)) | 
+if(!suppressMessages(library(data.table,logical.return=TRUE)) |
+	!suppressMessages(library(IRanges,logical.return=TRUE)) |
 	 !suppressMessages(library(BSgenome.Hsapiens.UCSC.hg19,logical.return=TRUE))) {
 		cat(required)
 		stop("Required packages are not installed!")
@@ -141,13 +141,20 @@ cat('\nReading in MAF...\n')
 d=read.csv(maf_fn,header=T,as.is=T,sep="\t",comment.char='#')
 d=prepmaf(d,expressiontb)
 
+## remove mutations outside chr 1:22, x,y, including MT
+## -modifiedbyTC-
+cat('\n Remove non-canonical chromosomes\n')
+d <- d[which(grepl("^[1-9XY]",d$Chromosome)),]
+
+
+
 
 # writing temp files to annotate MAF with trinucleotides
 write.table(d,'___temp_maf.tm',row.names=F,quote=F,sep="\t")
 system(command='python make_trinuc_maf.py ___temp_maf.tm ___temp_maf-tri.tm')
 # clean up tmp files
 d=read.csv('___temp_maf-tri.tm',header=T,as.is=T,sep="\t",comment.char='#')
-system(command='rm ___t*')
+# system(command='rm ___t*')
 cat('\nFinished prepping MAF!\n')
 
 TOTAL_SAMPLES=length(unique(d$Master_ID))
@@ -156,7 +163,7 @@ min_prob=quantile(all_prob,0.2)
 
 
 genes=unique(d$Hugo_Symbol)
-if(GENES_INTEREST) { 
+if(GENES_INTEREST) {
 	genes=read.csv(gene_interest_fn,header=F,as.is=T,sep="\t")[,1]
 	genes=genes[ which(genes %in% d$Hugo_Symbol) ]
 	# ii=which(!genes %in% d$Hugo_Symbol)
@@ -169,10 +176,10 @@ output=lapply(genes,binom.test_snp)
 output=do.call('rbind',output)
 
 # filter output to only the significant hits
-output=output[ which(output$qvalue < QVAL), ]
+# output=output[ which(output$qvalue < QVAL), ]
 output=output[ order(output$qvalue), ]
 
-# annotating homopolymer 
+# annotating homopolymer
 if(HOMOPOLYMER_FILTER) {
 	output=cbind(output,annotate.homopolymers(sig=output,homopolymerbed))
 	output$Is_repeat=as.logical(output$Is_repeat)
